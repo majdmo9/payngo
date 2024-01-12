@@ -19,7 +19,9 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
     setLoading(id);
     const { data } = await storeFront(checkoutMutation, { variantId: id });
     const { webUrl } = data.checkoutCreate.checkout;
-    window.open(webUrl, "_blank");
+    setTimeout(() => {
+      window.open(webUrl, "_blank");
+    });
     setLoading("");
   };
 
