@@ -55,7 +55,7 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
               <Image className="rounded-lg" alt="nft-image" width={300} height={300} src={product.node.images.edges[0].node.url} />
               <button
                 onClick={() => handleCheckout(product.node.variants.edges[0].node.id)}
-                className="flex justify-between font-semibold  bg-blue-600 ml-auto p-2 rounded-lg w-full items-center"
+                className="flex justify-between font-semibold text-white bg-blue-600 ml-auto p-2 rounded-lg w-full items-center"
               >
                 <div />
                 BUY {formatCurrency(Number(product.node.priceRange.minVariantPrice.amount))}
