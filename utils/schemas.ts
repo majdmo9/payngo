@@ -70,9 +70,51 @@ query Products($after: String!) {
 }
 `;
 
+export const queryListOfProducts = `
+query Products($query: String!) {
+  products(first:100, query:$query) {
+    edges {
+      node {
+        id
+        title
+        priceRange{
+          minVariantPrice{
+            amount
+          }
+        }
+        images(first: 1) {
+          edges {
+            node {
+              url(transform: {})
+            }
+          }
+        }
+        variants(first: 1){
+          edges{
+            node{
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
 export const checkoutMutation = `
   mutation checkoutCreate($variantId: ID!) {
     checkoutCreate(input: { lineItems: { variantId: $variantId, quantity: 1 } }) {
+      checkout {
+        webUrl
+      }
+    }
+  }
+`;
+
+export const checkoutListMutation = ({ ids }: { ids: string[] }) => `
+  mutation checkoutCreate {
+    checkoutCreate(input: { lineItems: [${ids.map(id => `{ variantId: "${id}", quantity: 1 }`)}] }) {
       checkout {
         webUrl
       }

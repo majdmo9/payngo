@@ -1,19 +1,29 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import Image from "next/image";
+
+import { PlusIcon, ShoppingBagIcon } from "@heroicons/react/16/solid";
+import InfiniteScroll from "react-infinite-scroll-component";
+
 import { ProductsResponse } from "@payngo/types/products";
 import { storeFront } from "@payngo/utils";
 import { formatCurrency } from "@payngo/utils/currency";
 import { checkoutMutation, paginateProducts } from "@payngo/utils/schemas";
-import InfiniteScroll from "react-infinite-scroll-component";
+import { LocalStorageVarivables } from "@payngo/constants/localStorag";
+
+import Badge from "./generals/Badge";
 import Loader from "./Loader";
 import SearchBar from "./SearchBar";
 
 const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
+  const router = useRouter();
+
   const [isLoading, setLoading] = useState("");
   const [products, setProducts] = useState(edges);
   const [productsToRender, setProductsToRender] = useState(edges);
   const [haseNext, setHasNext] = useState(pageInfo.hasNextPage);
   const [searchText, setSearchText] = useState("");
+  const [cartItems, setCartItems] = useState<string[]>([]);
 
   const handleCheckout = async (id: string) => {
     setLoading(id);
@@ -23,6 +33,11 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
       window.open(webUrl, "_blank");
     });
     setLoading("");
+  };
+
+  const handleAddToCart = (id: string) => {
+    localStorage.setItem(LocalStorageVarivables.CART_ITEMS, JSON.stringify(Array.from(new Set([...cartItems, id]))));
+    setCartItems(JSON.parse(localStorage.getItem(LocalStorageVarivables.CART_ITEMS) ?? "[]"));
   };
 
   const paginate = async () => {
@@ -37,32 +52,61 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
       setProductsToRender(products);
       return;
     }
-    setProductsToRender(products.filter(el => el.node.title.includes(searchText)));
+    setProductsToRender(products.filter(el => el.node.title.toLowerCase().includes(searchText)));
   }, [searchText]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCartItems(JSON.parse(localStorage.getItem(LocalStorageVarivables.CART_ITEMS) ?? "[]"));
+    }
+  }, []);
 
   return (
     <div className="flex flex-col gap-12 w-full items-center">
-      <SearchBar text={searchText} setText={setSearchText} />
+      <div className="flex w-full gap-8 items-center px-8">
+        <SearchBar text={searchText} setText={setSearchText} />
+        <button
+          onClick={() => {
+            router.push({ pathname: "/cart", query: { cartItems: localStorage.getItem(LocalStorageVarivables.CART_ITEMS) } });
+          }}
+          className="relative bg-gray-50 hover:bg-gray-700 border border-gray-300 text-gray-500 disabled:bg-gray-100 disabled:text-gray-200 hover:text-gray-50 rounded-lg p-1 transition-all dark:text-gray-50 dark:bg-gray-700 dark:border-gray-600"
+          disabled={!cartItems.length}
+        >
+          <Badge count={cartItems.length} />
+          <ShoppingBagIcon className="w-10 h-10" />
+        </button>
+      </div>
       <InfiniteScroll
         dataLength={productsToRender.length}
         hasMore={!!productsToRender.length && haseNext}
         next={paginate}
         loader={<Loader />}
-        className="flex flex-wrap gap-8 justify-center"
+        className="flex flex-wrap gap-8 justify-center py-4"
       >
         {!!productsToRender.length ? (
           productsToRender.map(product => (
             <div className="items-start flex flex-col gap-4 shadow-lg p-4 rounded-lg bg-white justify-between" key={product.node.id}>
               <p className="font-semibold text-md dark:text-black">{product.node.title.toUpperCase()}</p>
               <Image className="rounded-lg" alt="nft-image" width={300} height={300} src={product.node.images.edges[0].node.url} />
-              <button
-                onClick={() => handleCheckout(product.node.variants.edges[0].node.id)}
-                className="flex justify-between font-semibold text-white bg-blue-600 ml-auto p-2 rounded-lg w-full items-center"
-              >
-                <div />
-                BUY {formatCurrency(Number(product.node.priceRange.minVariantPrice.amount))}
-                {isLoading === product.node.variants.edges[0].node.id ? <Loader /> : <div />}
-              </button>
+              <div className="flex justify-between items-center w-full gap-4 text-sm">
+                <button
+                  onClick={() => handleAddToCart(product.node.id)}
+                  className="flex justify-between font-semibold  text-white bg-blue-600 ml-auto disabled:bg-gray-50 disabled:text-gray-300 p-2 rounded-lg w-full items-center"
+                  disabled={cartItems.includes(product.node.id)}
+                >
+                  <div />
+                  ADD TO CART <PlusIcon className="w-5 h-5" />
+                  <div />
+                </button>
+                <button
+                  onClick={() => handleCheckout(product.node.variants.edges[0].node.id)}
+                  className="flex justify-between font-semibold text-white bg-blue-600 ml-auto p-2 rounded-lg w-full items-center"
+                >
+                  <div />
+                  BUY {formatCurrency(Number(product.node.priceRange.minVariantPrice.amount))}
+                  {isLoading === product.node.variants.edges[0].node.id ? <Loader /> : <div />}
+                </button>
+              </div>
             </div>
           ))
         ) : (
