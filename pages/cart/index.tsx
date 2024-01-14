@@ -5,7 +5,7 @@ import { queryListOfProducts } from "@payngo/utils/schemas";
 import { GetServerSideProps, GetStaticProps } from "next";
 
 const CartPage = ({ cartItems }: { cartItems: ProductsResponse["edges"] }) => (
-  <main className="flex min-h-screen flex-col items-center justify-between p-24">
+  <main className="flex min-h-screen flex-col items-center justify-between sm:p-24">
     <Cart cartItems={cartItems} />
   </main>
 );

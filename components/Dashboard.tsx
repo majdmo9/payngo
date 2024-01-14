@@ -14,9 +14,11 @@ import { LocalStorageVarivables } from "@payngo/constants/localStorag";
 import Badge from "./generals/Badge";
 import Loader from "./Loader";
 import SearchBar from "./SearchBar";
+import { useIsMobile } from "@payngo/hooks/useIsMobile";
 
 const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
   const router = useRouter();
+  const { isMobile } = useIsMobile();
 
   const [isLoading, setLoading] = useState("");
   const [products, setProducts] = useState(edges);
@@ -62,18 +64,18 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
   }, []);
 
   return (
-    <div className="flex flex-col gap-12 w-full items-center">
-      <div className="flex w-full gap-8 items-center px-8">
+    <div className="flex flex-col w-full items-center">
+      <div className="flex w-full gap-4 py-4 dark:bg-gray-800 sm:bg-transparent sm:dark:bg-transparent bg-gray-300 sticky top-0 sm:relative sm:gap-8 items-center px-4 sm:px-8">
         <SearchBar text={searchText} setText={setSearchText} />
         <button
           onClick={() => {
             router.push({ pathname: "/cart", query: { cartItems: localStorage.getItem(LocalStorageVarivables.CART_ITEMS) } });
           }}
-          className="relative bg-gray-50 hover:bg-gray-700 border border-gray-300 text-gray-500 disabled:bg-gray-100 disabled:text-gray-200 hover:text-gray-50 rounded-lg p-1 transition-all dark:text-gray-50 dark:bg-gray-700 dark:border-gray-600"
+          className="relative bg-gray-50 hover:bg-gray-700 border border-gray-300 text-gray-500 dark:disabled:bg-gray-400 disabled:bg-gray-100 disabled:text-gray-200 hover:text-gray-50 rounded-lg p-1 transition-all dark:text-gray-50 dark:bg-gray-700 dark:border-gray-600"
           disabled={!cartItems.length}
         >
           <Badge count={cartItems.length} />
-          <ShoppingBagIcon className="w-10 h-10" />
+          <ShoppingBagIcon className="w-8 h-8 sm:w-10 sm:h-10" />
         </button>
       </div>
       <InfiniteScroll
@@ -81,29 +83,30 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
         hasMore={!!productsToRender.length && haseNext}
         next={paginate}
         loader={<Loader />}
-        className="flex flex-wrap gap-8 justify-center py-4"
+        className="flex flex-wrap gap-8 justify-center px-20 py-4 sm:py-12"
       >
         {!!productsToRender.length ? (
           productsToRender.map(product => (
             <div className="items-start flex flex-col gap-4 shadow-lg p-4 rounded-lg bg-white justify-between" key={product.node.id}>
               <p className="font-semibold text-md dark:text-black">{product.node.title.toUpperCase()}</p>
               <Image className="rounded-lg" alt="nft-image" width={300} height={300} src={product.node.images.edges[0].node.url} />
-              <div className="flex justify-between items-center w-full gap-4 text-sm">
+              <div className="flex justify-between items-center w-full gap-4 sm:font-semibold text-sm">
                 <button
                   onClick={() => handleAddToCart(product.node.id)}
-                  className="flex justify-between font-semibold  text-white bg-blue-600 ml-auto disabled:bg-gray-50 disabled:text-gray-300 p-2 rounded-lg w-full items-center"
+                  className="flex justify-between  text-white bg-blue-600 ml-auto disabled:bg-gray-50 disabled:text-gray-300 p-2 rounded-lg w-full items-center"
                   disabled={cartItems.includes(product.node.id)}
                 >
                   <div />
-                  ADD TO CART <PlusIcon className="w-5 h-5" />
+                  {isMobile ? <ShoppingBagIcon className="w-5 h-5" /> : "ADD TO CART"}
+                  {!isMobile ? <PlusIcon className="w-4 h-4" /> : <></>}
                   <div />
                 </button>
                 <button
                   onClick={() => handleCheckout(product.node.variants.edges[0].node.id)}
-                  className="flex justify-between font-semibold text-white bg-blue-600 ml-auto p-2 rounded-lg w-full items-center"
+                  className="flex justify-between text-white bg-blue-600 ml-auto p-2 rounded-lg w-full items-center"
                 >
                   <div />
-                  BUY {formatCurrency(Number(product.node.priceRange.minVariantPrice.amount))}
+                  {!isMobile ? "BUY" : <></>} {formatCurrency(Number(product.node.priceRange.minVariantPrice.amount))}
                   {isLoading === product.node.variants.edges[0].node.id ? <Loader /> : <div />}
                 </button>
               </div>

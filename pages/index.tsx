@@ -5,7 +5,7 @@ import { getProducts } from "@payngo/utils/schemas";
 
 export default function Home({ pageInfo, edges }: ProductsResponse) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
+    <main className="flex min-h-screen flex-col items-center justify-between sm:p-24">
       <Dashboard edges={edges} pageInfo={pageInfo} />
     </main>
   );

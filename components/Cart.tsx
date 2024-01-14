@@ -8,6 +8,7 @@ import { checkoutListMutation } from "@payngo/utils/schemas";
 import Loader from "./Loader";
 import { LocalStorageVarivables } from "@payngo/constants/localStorag";
 import { useRouter } from "next/router";
+import { useIsMobile } from "@payngo/hooks/useIsMobile";
 
 interface Props {
   cartItems: ProductsResponse["edges"];
@@ -15,6 +16,8 @@ interface Props {
 
 const Cart = ({ cartItems }: Props) => {
   const router = useRouter();
+  const { isMobile } = useIsMobile();
+
   const [subtotal, setSubtotal] = useState(0);
   const [isLoading, setLoading] = useState(false);
 
@@ -39,15 +42,21 @@ const Cart = ({ cartItems }: Props) => {
     router.replace({ pathname: "/cart", query: { cartItems: JSON.stringify(filteredItems) } });
   };
 
+  const ProductTitle = (title: string) => (
+    <div className="w-2/3 px-4">
+      <h2 className="mb-2 text-xl font-bold dark:text-white">{title}</h2>
+    </div>
+  );
+
   useEffect(() => {
     const totalPrice = cartItems.reduce((accumulator, currentValue) => accumulator + Number(currentValue.node.priceRange.minVariantPrice.amount), 0);
     setSubtotal(totalPrice);
   }, [cartItems]);
 
   return (
-    <section className="flex items-center justify-start font-poppins w-full">
+    <section className="flex items-center justify-center dark:bg-gray-800 sm:justify-start w-full">
       <div className="flex-1 px-4 mx-auto max-w-7xl lg:py-4 md:px-6">
-        <div className="p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+        <div className="p-8 rounded-lg">
           <h2 className="mb-8 text-4xl font-bold dark:text-white">Your Cart</h2>
           <div className="flex flex-wrap -mx-4">
             <div className="w-full px-4 mb-8 xl:w-8/12 xl:mb-0">
@@ -59,30 +68,40 @@ const Cart = ({ cartItems }: Props) => {
                   <h2 className="font-bold text-gray-500 dark:text-white">Price</h2>
                 </div>
               </div>
-              <div className="py-4 mb-8 border-t border-b border-gray-200 dark:border-gray-300">
+              <div className="flex flex-col py-4 gap-10 sm:gap-0 mb-8 border-t border-b border-gray-200 dark:border-gray-300">
                 {cartItems.map(item => (
-                  <div key={item.node.id} className="flex flex-wrap items-center mb-6 -mx-4 md:mb-8">
-                    <div className="w-full px-4 mb-6 md:w-4/6 lg:w-6/12 md:mb-0">
+                  <div key={item.node.id} className="flex flex-wrap items-center gap-6 sm:gap-0 sm:mb-6 -mx-4 md:mb-8">
+                    <div className="w-full px-4 sm:mb-6 md:w-4/6 lg:w-6/12 md:mb-0">
                       <div className="flex flex-wrap items-center -mx-4">
-                        <div className="w-full px-4 mb-3 md:w-1/3">
-                          <div className="w-full h-96 md:h-24 md:w-24">
-                            <Image width={300} height={300} src={item.node.images.edges[0].node.url} alt="" className="object-cover w-full h-full" />
+                        {isMobile ? ProductTitle(item.node.title) : <></>}
+                        <div className="w-full px-4 sm:mb-3 md:w-1/3">
+                          <div className="w-full sm:h-96 md:h-24 md:w-24">
+                            <Image
+                              width={300}
+                              height={300}
+                              src={item.node.images.edges[0].node.url}
+                              alt="product-title"
+                              className="object-contain sm:object-cover w-full h-full rounded-lg"
+                            />
                           </div>
                         </div>
-                        <div className="w-2/3 px-4">
-                          <h2 className="mb-2 text-xl font-bold dark:text-white">{item.node.title}</h2>
-                        </div>
+                        {!isMobile ? ProductTitle(item.node.title) : <></>}
                       </div>
                     </div>
-                    <div className="hidden px-4 lg:block lg:w-2/12">
-                      <p className="text-lg font-bold text-blue-500 dark:text-white">
-                        {formatCurrency(Number(item.node.priceRange.minVariantPrice.amount))}
-                      </p>
-                    </div>
-                    <div className="hidden px-4 lg:block lg:w-2/12">
-                      <button onClick={() => handleRemoveItem(item.node.id)} className="text-md font-semibold text-red-500">
-                        Remove
-                      </button>
+                    <div className="flex justify-between w-full items-center sm:contents">
+                      <div className="px-4 lg:block lg:w-2/12">
+                        <p className="text-lg font-bold dark:text-blue-500 dark:text-white">
+                          {formatCurrency(Number(item.node.priceRange.minVariantPrice.amount))}
+                        </p>
+                      </div>
+                      <div className="px-4 lg:block lg:w-2/12">
+                        <button
+                          onClick={() => handleRemoveItem(item.node.id)}
+                          className="text-md sm:font-semibold sm:text-red-500 sm:bg-transparent bg-red-500 rounded-lg py-1 px-3"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -103,8 +122,7 @@ const Cart = ({ cartItems }: Props) => {
                   <span className="text-gray-700 dark:text-white">Order Total</span>
                   <span className="text-xl font-bold text-gray-700 dark:text-white">{formatCurrency(subtotal)}</span>
                 </div>
-
-                <div className="flex items-center justify-between ">
+                <div className="flex items-center justify-between">
                   <button
                     onClick={handleCheckout}
                     className="flex justify-between items-center p-4 w-full font-semibold text-center text-gray-100 uppercase bg-blue-500 rounded-md hover:bg-blue-600"
