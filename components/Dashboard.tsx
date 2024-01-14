@@ -65,7 +65,7 @@ const Dashboard = ({ edges, pageInfo }: ProductsResponse) => {
 
   return (
     <div className="flex flex-col w-full items-center">
-      <div className="flex w-full gap-4 py-4 dark:bg-gray-800 sm:bg-transparent sm:dark:bg-transparent bg-gray-300 sticky top-0 sm:relative sm:gap-8 items-center px-4 sm:px-8">
+      <div className="flex w-full gap-4 z-10 py-4 dark:bg-gray-800 sm:bg-transparent sm:dark:bg-transparent bg-gray-300 sticky top-0 sm:relative sm:gap-8 items-center px-4 sm:px-8">
         <SearchBar text={searchText} setText={setSearchText} />
         <button
           onClick={() => {
